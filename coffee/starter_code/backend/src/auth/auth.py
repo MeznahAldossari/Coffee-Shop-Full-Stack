@@ -65,7 +65,6 @@ def get_token_auth_header():
             'description': 'Authorization header should be bearer token'
         }, 401)
     
-   
 
    return length[1]
     
