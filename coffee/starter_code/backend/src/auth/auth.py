@@ -11,11 +11,13 @@ AUTH0_DOMAIN = 'dev-p7xsqvkb.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'https://coffee.com/api'
 
-## AuthError Exception
+# AuthError Exception
 '''
+
 AuthError Exception
 A standardized way to communicate auth failure modes
 '''
+
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
@@ -23,9 +25,7 @@ class AuthError(Exception):
         self.status_code = status_code
 
 
-
-## Auth Header
-
+# Auth Header
 '''
 @TODO implement get_token_auth_header() method
     it should attempt to get the header from the request
@@ -34,40 +34,39 @@ class AuthError(Exception):
         it should raise an AuthError if the header is malformed
     return the token part of the header
 '''
+
+
 def get_token_auth_header():
 
-   if 'Authorization' not in request.headers:
-      raise AuthError({
+    if 'Authorization' not in request.headers:
+        raise AuthError({
             'code': 'authorization_header_missing',
             'description': 'Authorization header is expected.'
         }, 401)
 
-   Gettig = request.headers['Authorization']
-   authorizations =Gettig.split(" ")
-   length = len(authorizations)
+    Gettig = request.headers['Authorization']
+    authorizations = Gettig.split(" ")
+    length = len(authorizations)
 
-
-   if authorizations[0].lower() !='bearer':
-       raise AuthError({
+    if authorizations[0].lower() != 'bearer':
+        raise AuthError({
             'code': 'Invalid_header',
             'description': 'Authorization header must start with bearer'
         }, 401)
-    
-   elif length ==1:
-       raise AuthError({
+
+    elif length == 1:
+        raise AuthError({
             'code': 'Invalid_header',
             'description': 'Cannot found TOKEN'
         }, 401)
-   
-   elif length >2:
-       raise AuthError({
+
+    elif length > 2:
+        raise AuthError({
             'code': 'Invalid_header',
             'description': 'Authorization header should be bearer token'
         }, 401)
-    
 
-   return length[1]
-    
+    return length[1]
 
 
 '''
@@ -81,6 +80,8 @@ def get_token_auth_header():
     it should raise an AuthError if the requested permission string is not in the payload permissions array
     return true otherwise
 '''
+
+
 def check_permissions(permission, payload):
     Boolean_value = True
     if 'permissions' not in payload:
@@ -88,11 +89,12 @@ def check_permissions(permission, payload):
             'code': 'Invalid_claims',
             'description': 'No permission in token'
         }, 400)
-    
+
     if permission not in payload['permissions']:
         abort(403)
 
     return Boolean_value
+
 
 '''
 @TODO implement verify_decode_jwt(token) method
@@ -107,65 +109,68 @@ def check_permissions(permission, payload):
 
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 '''
+
+
 def verify_decode_jwt(token):
     Var = "https://"+AUTH0_DOMAIN+"/.well-known/jwks.json"
     JSON_Val = urlopen(Var)
     Loading = json.loads(JSON_Val.read())
     getHeader = jwt.get_unverified_header(token)
-    
+
     if 'kid' not in getHeader:
         raise AuthError({
             'code': 'Invalid_header',
             'description': 'Authorization error'
         }, 401)
 
-    List ={}
+    List = {}
 
     for value in Loading['keys']:
         Key_val = value['kid']
 
         if Key_val == getHeader['kid']:
-            List={
-                'kty': value['kty'], 'kid':value['kid'],
+            List = {
+                'kty': value['kty'], 'kid': value['kid'],
                 'use': value['use'], 'n': value['n'],
                 'e': value['e']
             }
-    
+
     if List:
-      try:
-        Auth0 ="https://"+ AUTH0_DOMAIN +"/"
-        payload_decode = jwt.decode(
-            token,
-            List,
-            algorithms=ALGORITHMS,
-            audience=API_AUDIENCE,
-            issuer=Auth0
-        )
+        try:
+            Auth0 = "https://" + AUTH0_DOMAIN + "/"
+            payload_decode = jwt.decode(
+                token,
+                List,
+                algorithms=ALGORITHMS,
+                audience=API_AUDIENCE,
+                issuer=Auth0
+            )
 
-        return payload_decode
+            return payload_decode
 
-      except jwt.JWTClaimsError:
-          raise AuthError({
-            'code': 'Invalid_claims',
-            'description': 'Invalid claims'
-        }, 401)
+        except jwt.JWTClaimsError:
+            raise AuthError({
+                'code': 'Invalid_claims',
+                'description': 'Invalid claims'
+            }, 401)
 
-      except jwt.ExpiredSignatureError:
-          raise AuthError({
+        except jwt.ExpiredSignatureError:
+            raise AuthError({
                 'code': 'token_expired',
                 'description': 'the Token is expired.'
             }, 401)
 
-      except:
-          raise AuthError({
-            'code': 'Invalid_header',
-            'description': 'Invalid header'
-        }, 400)
-          
+        except:
+            raise AuthError({
+                'code': 'Invalid_header',
+                'description': 'Invalid header'
+            }, 400)
+
     raise AuthError({
-            'code': 'Invalid_header',
-            'description': 'Cannot find key'
-        }, 400)
+        'code': 'Invalid_header',
+        'description': 'Cannot find key'
+    }, 400)
+
 
 '''
 @TODO implement @requires_auth(permission) decorator method
@@ -177,6 +182,8 @@ def verify_decode_jwt(token):
     it should use the check_permissions method validate claims and check the requested permission
     return the decorator which passes the decoded payload to the decorated method
 '''
+
+
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
